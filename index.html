@@ -1141,7 +1141,7 @@ select.form-select:focus {
                     <label for="language-select" data-i18n="languageLabel">Language</label>
                     <select id="language-select" class="form-select">
                         <option value="en">English</option>
-                        <option value="es">Español</option>
+                        <option value="es" selected>Español</option>
                     </select>
                 </div>
                 <div class="credits">
@@ -1162,14 +1162,14 @@ select.form-select:focus {
     <!-- Modal: Image Position Picker -->
     <div class="pos-picker-overlay" id="pos-picker-overlay">
         <div class="pos-picker-box">
-            <h3>Ajustar imagen / Adjust image</h3>
-            <p>Arrastra la imagen para elegir qué parte se muestra en la tarjeta.<br>Drag to choose which part shows on the card.</p>
+            <h3 data-i18n="posPickerTitle">Ajustar imagen</h3>
+            <p data-i18n="posPickerDesc">Arrastra la imagen para elegir qué parte se muestra en la tarjeta.</p>
             <div class="pos-picker-viewport" id="pos-picker-viewport">
                 <img class="pos-picker-img" id="pos-picker-img" src="" alt="preview">
             </div>
             <div class="pos-picker-footer">
-                <button class="btn btn-secondary" id="pos-picker-cancel">Cancelar / Cancel</button>
-                <button class="btn btn-primary" id="pos-picker-confirm">Confirmar / Confirm</button>
+                <button class="btn btn-secondary" id="pos-picker-cancel" data-i18n="posPickerCancel">Cancelar</button>
+                <button class="btn btn-primary" id="pos-picker-confirm" data-i18n="posPickerConfirm">Confirmar</button>
             </div>
         </div>
     </div>
@@ -1198,7 +1198,7 @@ const db = getFirestore(app);
 // --- STATE MANAGEMENT ---
 const defaultState = {
     accentColor: '#6366f1',
-    language: 'en',
+    language: 'es',
     days: [],
     tasks: {} // { dayId: [task1, task2] }
 };
@@ -1242,7 +1242,11 @@ const translations = {
         loginSubtitle: "Sign in to sync your tasks",
         loginBtn: "Login with Google",
         logoutBtn: "Logout",
-        skipLoginBtn: "Continue as Guest"
+        skipLoginBtn: "Continue as Guest",
+        posPickerTitle: "Adjust image",
+        posPickerDesc: "Drag to choose which part shows on the card.",
+        posPickerCancel: "Cancel",
+        posPickerConfirm: "Confirm"
     },
     es: {
         pageTitle: "Taskflow | Gestor de Tareas Premium",
@@ -1277,7 +1281,11 @@ const translations = {
         loginSubtitle: "Inicia sesión para sincronizar tus tareas",
         loginBtn: "Iniciar con Google",
         logoutBtn: "Cerrar sesión",
-        skipLoginBtn: "Continuar como Invitado"
+        skipLoginBtn: "Continuar como Invitado",
+        posPickerTitle: "Ajustar imagen",
+        posPickerDesc: "Arrastra la imagen para elegir qué parte se muestra en la tarjeta.",
+        posPickerCancel: "Cancelar",
+        posPickerConfirm: "Confirmar"
     }
 };
 
