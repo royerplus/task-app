@@ -823,7 +823,140 @@ select.form-select:focus {
     border-color: var(--accent-color);
 }
 
-/* Custom Confirm Modal */
+/* Custom Color Picker Modal */
+.color-picker-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 400;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+}
+.color-picker-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+.color-picker-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    width: calc(100% - 40px);
+    max-width: 360px;
+    box-shadow: var(--shadow-md), 0 0 40px rgba(0,0,0,0.4);
+    transform: translateY(20px) scale(0.95);
+    transition: all var(--transition-fast);
+}
+.color-picker-overlay.active .color-picker-box {
+    transform: translateY(0) scale(1);
+}
+.color-picker-box h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+.color-swatches {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.color-swatch {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+.color-swatch:hover {
+    transform: scale(1.1);
+    border-color: rgba(255,255,255,0.3);
+}
+.color-swatch.selected::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+.color-picker-custom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: var(--bg-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+.color-picker-custom:hover {
+    border-color: var(--accent-color);
+}
+.color-picker-custom-preview {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.color-picker-custom span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+.color-picker-custom input[type="color"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.color-picker-preview-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background: var(--bg-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+.color-picker-preview-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background-color var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.color-picker-preview-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+.color-picker-preview-hex {
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: monospace;
+}
+.color-picker-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* Custom Color Picker Modal */
 .confirm-modal-overlay {
     position: fixed;
     inset: 0;
@@ -1179,9 +1312,11 @@ select.form-select:focus {
                     <input type="text" id="day-name" placeholder="e.g., Day 1, Monday, Trip Day..." data-i18n-placeholder="dayNamePlaceholder" required>
                 </div>
                 <div class="form-group">
-                    <label for="day-color" data-i18n="dayColorLabel">Day Color (Optional)</label>
-                    <div style="display: flex;">
-                        <input type="color" id="day-color" value="#ffffff" style="width: 44px; height: 44px; padding: 0; cursor: pointer; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <label for="day-color" data-i18n="dayColorLabel">Color del día (Opcional)</label>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div id="day-color-preview" style="width: 44px; height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); cursor: pointer; transition: transform var(--transition-fast); flex-shrink:0;" title="Elegir color"></div>
+                        <span id="day-color-hex" style="font-family: monospace; font-size: 0.9rem; color: var(--text-secondary);">#ffffff</span>
+                        <input type="hidden" id="day-color" value="#ffffff">
                     </div>
                 </div>
             </div>
@@ -1218,6 +1353,30 @@ select.form-select:focus {
                         <i class="ph-bold ph-google-logo"></i> <span data-i18n="loginBtn">Login with Google</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Custom Color Picker -->
+    <div class="color-picker-overlay" id="color-picker-overlay">
+        <div class="color-picker-box">
+            <h3 id="color-picker-title">Color</h3>
+            <div class="color-swatches" id="color-swatches"></div>
+            <div class="color-picker-custom" id="color-picker-custom-btn">
+                <div class="color-picker-custom-preview" id="color-picker-custom-preview"></div>
+                <span id="color-picker-custom-label">Personalizado</span>
+                <input type="color" id="color-picker-custom-input">
+            </div>
+            <div class="color-picker-preview-row">
+                <div class="color-picker-preview-dot" id="color-picker-preview-dot"></div>
+                <div>
+                    <div class="color-picker-preview-label" id="color-picker-preview-label">Color seleccionado</div>
+                    <div class="color-picker-preview-hex" id="color-picker-preview-hex">#6366f1</div>
+                </div>
+            </div>
+            <div class="color-picker-footer">
+                <button class="btn btn-secondary" id="color-picker-cancel">Cancelar</button>
+                <button class="btn btn-primary" id="color-picker-ok">Aplicar</button>
             </div>
         </div>
     </div>
@@ -1546,6 +1705,37 @@ colorPicker.addEventListener('input', (e) => {
     applyThemeColor(e.target.value);
 });
 
+// Open custom color picker for accent color
+document.querySelector('.theme-accent-picker').addEventListener('click', (e) => {
+    e.preventDefault();
+    showColorPicker({
+        title: state.language === 'es' ? 'Color de acento' : 'Accent color',
+        current: state.accentColor,
+        onApply: (color) => {
+            applyThemeColor(color);
+            colorPicker.value = color;
+        }
+    });
+});
+
+// Day color picker
+const dayColorPreview = document.getElementById('day-color-preview');
+const dayColorHex = document.getElementById('day-color-hex');
+
+function setDayColorPreview(color) {
+    dayColorInput.value = color;
+    dayColorPreview.style.backgroundColor = color;
+    dayColorHex.textContent = color;
+}
+
+dayColorPreview.addEventListener('click', () => {
+    showColorPicker({
+        title: state.language === 'es' ? 'Color del día' : 'Day color',
+        current: dayColorInput.value || '#ffffff',
+        onApply: (color) => setDayColorPreview(color)
+    });
+});
+
 // Task Modes
 editTasksBtn.addEventListener('click', () => {
     isEditTasksMode = !isEditTasksMode;
@@ -1626,10 +1816,10 @@ function renderDays() {
         editBtn.innerHTML = '<i class="ph ph-pencil-simple"></i>';
         editBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            dayModalTitle.textContent = translations[state.language]?.editDayTitle || 'Edit Day';
+            dayModalTitle.textContent = translations[state.language]?.editDayTitle || 'Editar Día';
             dayIdInput.value = day.id;
             dayNameInput.value = day.name;
-            dayColorInput.value = day.color || '#ffffff';
+            setDayColorPreview(day.color || '#ffffff');
             openModal(dayModal);
             setTimeout(() => dayNameInput.focus(), 100);
         });
@@ -1841,10 +2031,10 @@ languageSelect.addEventListener('change', (e) => {
 
 // --- DAY LOGIC ---
 function triggerNewDay() {
-    dayModalTitle.textContent = translations[state.language]?.newDayTitle || 'New Day';
+    dayModalTitle.textContent = translations[state.language]?.newDayTitle || 'Nuevo Día';
     dayIdInput.value = '';
     dayNameInput.value = '';
-    dayColorInput.value = '#ffffff';
+    setDayColorPreview('#ffffff');
     openModal(dayModal);
     setTimeout(() => dayNameInput.focus(), 100);
 }
@@ -2295,6 +2485,90 @@ function deleteTask(id) {
         }
     });
 }
+
+// --- CUSTOM COLOR PICKER ---
+const colorPickerOverlay = document.getElementById('color-picker-overlay');
+const colorPickerTitle = document.getElementById('color-picker-title');
+const colorSwatchesEl = document.getElementById('color-swatches');
+const colorPickerCustomBtn = document.getElementById('color-picker-custom-btn');
+const colorPickerCustomPreview = document.getElementById('color-picker-custom-preview');
+const colorPickerCustomLabel = document.getElementById('color-picker-custom-label');
+const colorPickerCustomInput = document.getElementById('color-picker-custom-input');
+const colorPickerPreviewDot = document.getElementById('color-picker-preview-dot');
+const colorPickerPreviewHex = document.getElementById('color-picker-preview-hex');
+const colorPickerPreviewLabel = document.getElementById('color-picker-preview-label');
+const colorPickerCancel = document.getElementById('color-picker-cancel');
+const colorPickerOk = document.getElementById('color-picker-ok');
+
+const PRESET_COLORS = [
+    '#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316',
+    '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#06b6d4',
+    '#f4f4f5', '#a1a1aa', '#71717a', '#3f3f46', '#ffffff',
+];
+
+let cpSelectedColor = '#6366f1';
+let cpCallback = null;
+
+function showColorPicker({ title, current, onApply }) {
+    cpSelectedColor = current || '#6366f1';
+    cpCallback = onApply;
+
+    colorPickerTitle.textContent = title;
+    colorPickerCustomLabel.textContent = state.language === 'es' ? 'Personalizado' : 'Custom';
+    colorPickerPreviewLabel.textContent = state.language === 'es' ? 'Color seleccionado' : 'Selected color';
+    colorPickerCancel.textContent = state.language === 'es' ? 'Cancelar' : 'Cancel';
+    colorPickerOk.textContent = state.language === 'es' ? 'Aplicar' : 'Apply';
+
+    // Build swatches
+    colorSwatchesEl.innerHTML = '';
+    PRESET_COLORS.forEach(c => {
+        const sw = document.createElement('div');
+        sw.className = 'color-swatch' + (c === cpSelectedColor ? ' selected' : '');
+        sw.style.backgroundColor = c;
+        sw.addEventListener('click', () => {
+            cpSelectedColor = c;
+            updateCPPreview();
+            colorSwatchesEl.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+            sw.classList.add('selected');
+        });
+        colorSwatchesEl.appendChild(sw);
+    });
+
+    colorPickerCustomInput.value = cpSelectedColor;
+    colorPickerCustomPreview.style.backgroundColor = cpSelectedColor;
+    updateCPPreview();
+    colorPickerOverlay.classList.add('active');
+}
+
+function updateCPPreview() {
+    colorPickerPreviewDot.style.backgroundColor = cpSelectedColor;
+    colorPickerPreviewHex.textContent = cpSelectedColor;
+    colorPickerCustomPreview.style.backgroundColor = cpSelectedColor;
+    colorPickerCustomInput.value = cpSelectedColor;
+}
+
+colorPickerCustomBtn.addEventListener('click', () => {
+    colorPickerCustomInput.click();
+});
+
+colorPickerCustomInput.addEventListener('input', (e) => {
+    cpSelectedColor = e.target.value;
+    colorSwatchesEl.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    updateCPPreview();
+});
+
+colorPickerCancel.addEventListener('click', () => {
+    colorPickerOverlay.classList.remove('active');
+});
+
+colorPickerOk.addEventListener('click', () => {
+    colorPickerOverlay.classList.remove('active');
+    if (cpCallback) cpCallback(cpSelectedColor);
+});
+
+colorPickerOverlay.addEventListener('click', (e) => {
+    if (e.target === colorPickerOverlay) colorPickerOverlay.classList.remove('active');
+});
 
 // --- CUSTOM CONFIRM MODAL ---
 const confirmOverlay = document.getElementById('confirm-modal-overlay');
