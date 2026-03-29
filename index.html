@@ -1178,7 +1178,7 @@ select.form-select:focus {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
+// Firebase Storage not used - images saved as base64 in Firestore
 
 const firebaseConfig = {
     apiKey: "AIzaSyAVGKRhe7DmDyy4s8m6P3OwGTtn6FirEuA",
@@ -1193,7 +1193,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
+// Storage not used
 
 // --- STATE MANAGEMENT ---
 const defaultState = {
@@ -2040,20 +2040,13 @@ posPickerConfirm.addEventListener('click', async () => {
 
     try {
         let uploadUrl;
-        if (currentUser) {
-            const fileName = `task_covers/${currentUser.uid}/${Date.now()}_${generateId()}.jpg`;
-            const storageRef = ref(storage, fileName);
-            const snapshot = await uploadBytes(storageRef, pickerState.uploadBlob);
-            uploadUrl = await getDownloadURL(snapshot.ref);
-        } else {
-            // Guest: convert blob to base64 data URL
-            uploadUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = e => resolve(e.target.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(pickerState.uploadBlob);
-            });
-        }
+        // Always save as base64 in Firestore (no Firebase Storage needed)
+        uploadUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(pickerState.uploadBlob);
+        });
 
         currentImageUrl = uploadUrl;
         currentImagePosition = { x: posXpct, y: posYpct };
