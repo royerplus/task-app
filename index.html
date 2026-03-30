@@ -1472,6 +1472,20 @@ select.form-select:focus {
         </div>
     </div>
 
+    <!-- Modal: Custom Alert -->
+    <div class="confirm-modal-overlay" id="alert-modal-overlay">
+        <div class="confirm-modal-box">
+            <div class="confirm-modal-icon" style="color: var(--danger-color); font-size: 3rem; margin-bottom: 8px;">
+                <i class="ph ph-warning-circle"></i>
+            </div>
+            <h3 id="alert-modal-title" style="margin-bottom: 8px;"></h3>
+            <p id="alert-modal-desc" style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.95rem; line-height: 1.5;"></p>
+            <div class="confirm-modal-footer">
+                <button class="btn btn-primary" id="alert-modal-ok"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Image Position Picker -->
     <div class="pos-picker-overlay" id="pos-picker-overlay">
         <div class="pos-picker-box">
@@ -2138,7 +2152,7 @@ saveDayBtn.addEventListener('click', () => {
     const name = dayNameInput.value.trim();
     const color = dayColorInput.value || state.accentColor;
     if (!name) {
-        alert(state.language === 'es' ? '¡El nombre del día es obligatorio!' : 'Day name is required!');
+        showAlert(state.language === 'es' ? '¡El nombre del día es obligatorio!' : 'Day name is required!');
         return;
     }
 
@@ -2431,7 +2445,7 @@ posPickerConfirm.addEventListener('click', async () => {
 
     } catch(e) {
         console.error('[Upload] Failed:', e);
-        alert('Error al subir imagen / Failed to upload image: ' + (e.message || e));
+        showAlert(state.language === 'es' ? ('Error al subir imagen: ' + (e.message || e)) : ('Failed to upload image: ' + (e.message || e)));
         restoreUploadArea();
     } finally {
         isUploadInProgress = false;
@@ -2457,7 +2471,7 @@ posPickerCancel.addEventListener('click', () => {
 async function handleImageUpload(file) {
     if (!file || isUploadInProgress) return;
     if (!file.type.startsWith('image/')) {
-        alert('Please select a valid image file.');
+        showAlert(state.language === 'es' ? 'Por favor selecciona un archivo de imagen válido.' : 'Please select a valid image file.');
         return;
     }
     isUploadInProgress = true;
@@ -2479,7 +2493,7 @@ async function handleImageUpload(file) {
         // isUploadInProgress stays true until picker confirm/cancel
     } catch (e) {
         console.error('[Compress] Failed:', e);
-        alert('Failed to process image. Please try again.');
+        showAlert(state.language === 'es' ? 'Fallo al procesar imagen. Inténtalo de nuevo.' : 'Failed to process image. Please try again.');
         isUploadInProgress = false;
         taskImageInput.value = '';
         if (uploadIcon) uploadIcon.style.display = 'block';
@@ -2507,7 +2521,7 @@ imageUploadArea.addEventListener('drop', (e) => {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
         const file = e.dataTransfer.files[0];
         if (file.type.startsWith('image/')) handleImageUpload(file);
-        else alert('Please drop an image file.');
+        else showAlert(state.language === 'es' ? 'Por favor suelta un archivo de imagen.' : 'Please drop an image file.');
     }
 });
 
@@ -2519,7 +2533,7 @@ removeImageBtn.addEventListener('click', (e) => {
 saveTaskBtn.addEventListener('click', () => {
     const title = taskTitleInput.value.trim();
     if (!title) {
-        alert("Title is required.");
+        showAlert(state.language === 'es' ? 'El título es obligatorio.' : 'Title is required.');
         return;
     }
 
@@ -2695,6 +2709,32 @@ function showConfirm({ icon = '🗑️', title, desc, okText, cancelText, onOk }
 // Close confirm on overlay click
 confirmOverlay.addEventListener('click', (e) => {
     if (e.target === confirmOverlay) confirmOverlay.classList.remove('active');
+});
+
+// --- CUSTOM ALERT MODAL ---
+const alertOverlay = document.getElementById('alert-modal-overlay');
+const alertTitleEl = document.getElementById('alert-modal-title');
+const alertDescEl = document.getElementById('alert-modal-desc');
+const alertOkBtn = document.getElementById('alert-modal-ok');
+
+function showAlert(desc, title) {
+    alertTitleEl.textContent = title || (state.language === 'es' ? 'Atención' : 'Attention');
+    alertDescEl.textContent = desc;
+    alertOkBtn.textContent = state.language === 'es' ? 'Aceptar' : 'OK';
+    alertOverlay.classList.add('active');
+
+    const cleanup = () => {
+        alertOverlay.classList.remove('active');
+        alertOkBtn.removeEventListener('click', handleOk);
+    };
+    const handleOk = () => cleanup();
+
+    alertOkBtn.addEventListener('click', handleOk);
+}
+
+// Close alert on overlay click
+alertOverlay.addEventListener('click', (e) => {
+    if (e.target === alertOverlay) alertOverlay.classList.remove('active');
 });
 
 
