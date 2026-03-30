@@ -1561,9 +1561,18 @@ select.form-select:focus {
             <div class="pos-picker-viewport" id="pos-picker-viewport">
                 <img class="pos-picker-img" id="pos-picker-img" src="" alt="preview">
             </div>
-            <div class="pos-picker-footer">
-                <button class="btn btn-secondary" id="pos-picker-cancel" data-i18n="posPickerCancel">Cancelar</button>
-                <button class="btn btn-primary" id="pos-picker-confirm" data-i18n="posPickerConfirm">Confirmar</button>
+            <div class="pos-picker-footer" style="justify-content: space-between;">
+                <select id="pos-picker-ratio" class="form-select" style="width: auto; padding: 10px 32px 10px 12px;">
+                    <option value="16/9">16:9</option>
+                    <option value="4/3">4:3</option>
+                    <option value="1/1">1:1</option>
+                    <option value="2/1">2:1</option>
+                    <option value="auto" data-i18n="ratioAuto">Libre</option>
+                </select>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" id="pos-picker-cancel" data-i18n="posPickerCancel">Cancelar</button>
+                    <button class="btn btn-primary" id="pos-picker-confirm" data-i18n="posPickerConfirm">Confirmar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1641,7 +1650,8 @@ const translations = {
         posPickerDesc: "Drag to choose which part shows on the card.",
         posPickerCancel: "Cancel",
         posPickerConfirm: "Confirm",
-        confirmBatchBtn: "Delete"
+        confirmBatchBtn: "Delete",
+        ratioAuto: "Free"
     },
     es: {
         pageTitle: "Taskflow | Gestor de Tareas Premium",
@@ -1681,7 +1691,8 @@ const translations = {
         posPickerDesc: "Arrastra la imagen para elegir qué parte se muestra en la tarjeta.",
         posPickerCancel: "Cancelar",
         posPickerConfirm: "Confirmar",
-        confirmBatchBtn: "Eliminar"
+        confirmBatchBtn: "Eliminar",
+        ratioAuto: "Libre"
     }
 };
 
@@ -1797,6 +1808,7 @@ let selectedTasksForDeletion = new Set();
 // Image state
 let currentImageUrl = null;
 let currentImagePosition = { x: 50, y: 50 }; // object-position percentages
+let currentImageAspectRatio = '16/9';
 
 // Auth
 const loginScreen = document.getElementById('login-screen');
@@ -2185,7 +2197,9 @@ function renderTasks() {
             let coverHtml = '';
             if (task.imageURL) {
                 const pos = task.imagePosition || { x: 50, y: 50 };
-                coverHtml = `<img src="${task.imageURL}" alt="Cover" class="task-cover" style="object-position: ${pos.x}% ${pos.y}%;">`;
+                const ratio = task.imageAspectRatio || '16/9';
+                const styleRatio = ratio === 'auto' ? 'height: auto; aspect-ratio: auto;' : `height: auto; aspect-ratio: ${ratio};`;
+                coverHtml = `<img src="${task.imageURL}" alt="Cover" class="task-cover" style="object-position: ${pos.x}% ${pos.y}%; ${styleRatio}">`;
             }
 
             // Description HTML (truncation handled by CSS)
@@ -2378,12 +2392,14 @@ function openTaskModal(task = null) {
         taskTitleInput.value = task.title;
         taskDescInput.value = task.description;
         const pos = task.imagePosition || { x: 50, y: 50 };
-        setCoverImagePreview(task.imageURL || null, pos);
+        currentImageAspectRatio = task.imageAspectRatio || '16/9';
+        setCoverImagePreview(task.imageURL || null, pos, currentImageAspectRatio);
     } else {
         taskModalTitle.textContent = t.newTaskTitle || (state.language === 'es' ? 'Nueva Tarea' : 'New Task');
         taskIdInput.value = '';
         taskTitleInput.value = '';
         taskDescInput.value = '';
+        currentImageAspectRatio = '16/9';
         setCoverImagePreview(null);
     }
     
@@ -2393,13 +2409,15 @@ function openTaskModal(task = null) {
     }
 }
 
-function setCoverImagePreview(url, position) {
+function setCoverImagePreview(url, position, ratio = '16/9') {
     currentImageUrl = url;
     if (position) currentImagePosition = position;
+    if (ratio) currentImageAspectRatio = ratio;
     
     if (url) {
         imagePreview.src = url;
         imagePreview.style.objectPosition = `${currentImagePosition.x}% ${currentImagePosition.y}%`;
+        imagePreview.style.aspectRatio = currentImageAspectRatio === 'auto' ? 'auto' : currentImageAspectRatio;
         imagePreview.style.display = 'block';
         imagePreview.style.width = '100%';
         imagePreview.style.height = '100%';
@@ -2467,6 +2485,13 @@ const posPickerViewport = document.getElementById('pos-picker-viewport');
 const posPickerImg = document.getElementById('pos-picker-img');
 const posPickerConfirm = document.getElementById('pos-picker-confirm');
 const posPickerCancel = document.getElementById('pos-picker-cancel');
+const posPickerRatio = document.getElementById('pos-picker-ratio');
+
+posPickerRatio.addEventListener('change', (e) => {
+    currentImageAspectRatio = e.target.value;
+    posPickerViewport.style.aspectRatio = currentImageAspectRatio === 'auto' ? 'auto' : currentImageAspectRatio;
+    requestAnimationFrame(() => initPickerLayout());
+});
 
 // State for the picker
 let pickerState = {
@@ -2486,6 +2511,9 @@ let pickerState = {
 };
 
 function openPositionPicker(blob) {
+    posPickerRatio.value = currentImageAspectRatio;
+    posPickerViewport.style.aspectRatio = currentImageAspectRatio === 'auto' ? 'auto' : currentImageAspectRatio;
+
     pickerState.uploadBlob = blob;
     if (pickerState.blobUrl) URL.revokeObjectURL(pickerState.blobUrl);
     pickerState.blobUrl = URL.createObjectURL(blob);
@@ -2734,6 +2762,7 @@ saveTaskBtn.addEventListener('click', () => {
             task.description = desc;
             task.imageURL = currentImageUrl;
             task.imagePosition = currentImageUrl ? currentImagePosition : null;
+            task.imageAspectRatio = currentImageUrl ? currentImageAspectRatio : '16/9';
             if (currentUser) saveTaskFirebase(currentDayId, task, state.tasks[currentDayId].indexOf(task));
         }
     } else {
@@ -2744,6 +2773,7 @@ saveTaskBtn.addEventListener('click', () => {
             description: desc,
             imageURL: currentImageUrl,
             imagePosition: currentImageUrl ? currentImagePosition : null,
+            imageAspectRatio: currentImageUrl ? currentImageAspectRatio : '16/9',
             completed: false,
             createdAt: Date.now()
         };
