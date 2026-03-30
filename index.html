@@ -424,9 +424,9 @@ body {
     position: absolute;
     inset: 0;
     border-radius: var(--radius-lg);
-    box-shadow: inset 0 0 0 1px var(--accent-color);
+    box-shadow: none;
     opacity: 0;
-    transition: opacity var(--transition-slow), box-shadow 0s 0.3s; 
+    transition: opacity var(--transition-slow), box-shadow var(--transition-fast);
     pointer-events: none;
 }
 
@@ -437,6 +437,7 @@ body {
 
 .task-card:hover::after {
     opacity: 1;
+    box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
 .task-card:active {
