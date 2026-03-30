@@ -424,9 +424,9 @@ body {
     position: absolute;
     inset: 0;
     border-radius: var(--radius-lg);
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1px var(--accent-color);
     opacity: 0;
-    transition: opacity var(--transition-slow), box-shadow var(--transition-fast);
+    transition: opacity var(--transition-slow), box-shadow 0s 0.3s; 
     pointer-events: none;
 }
 
@@ -437,7 +437,6 @@ body {
 
 .task-card:hover::after {
     opacity: 1;
-    box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
 .task-card:active {
@@ -1228,7 +1227,7 @@ select.form-select:focus {
 
 .tasks-grid--delete-mode .task-card::after {
     opacity: 1;
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1px var(--danger-color);
     animation: borderPulseDelete 1.8s ease-in-out infinite;
 }
 
@@ -1242,12 +1241,17 @@ select.form-select:focus {
     box-shadow: 0 0 0 2px var(--danger-color), var(--shadow-md);
 }
 
-/* Stagger animation per card for a wave feel (edit mode only) */
-.tasks-grid--edit-mode .task-card:nth-child(2)::after { animation-delay: 0.15s; }
-.tasks-grid--edit-mode .task-card:nth-child(3)::after { animation-delay: 0.3s; }
-.tasks-grid--edit-mode .task-card:nth-child(4)::after { animation-delay: 0.45s; }
-.tasks-grid--edit-mode .task-card:nth-child(5)::after { animation-delay: 0.6s; }
-.tasks-grid--edit-mode .task-card:nth-child(6)::after { animation-delay: 0.75s; }
+/* Stagger animation per card for a wave feel */
+.tasks-grid--edit-mode .task-card:nth-child(2)::after,
+.tasks-grid--delete-mode .task-card:nth-child(2)::after { animation-delay: 0.15s; }
+.tasks-grid--edit-mode .task-card:nth-child(3)::after,
+.tasks-grid--delete-mode .task-card:nth-child(3)::after { animation-delay: 0.3s; }
+.tasks-grid--edit-mode .task-card:nth-child(4)::after,
+.tasks-grid--delete-mode .task-card:nth-child(4)::after { animation-delay: 0.45s; }
+.tasks-grid--edit-mode .task-card:nth-child(5)::after,
+.tasks-grid--delete-mode .task-card:nth-child(5)::after { animation-delay: 0.6s; }
+.tasks-grid--edit-mode .task-card:nth-child(6)::after,
+.tasks-grid--delete-mode .task-card:nth-child(6)::after { animation-delay: 0.75s; }
 
 /* Batch Delete Mode */
 .batch-delete-bar {
@@ -1937,16 +1941,12 @@ editTasksBtn.addEventListener('click', () => {
 deleteTasksBtn.addEventListener('click', () => {
     isDeleteTasksMode = !isDeleteTasksMode;
     isEditTasksMode = false;
-    const wasBatchMode = isBatchDeleteMode;
     if (!isDeleteTasksMode) {
         isBatchDeleteMode = false;
         selectedTasksForDeletion.clear();
+        renderTasks();
     }
     updateTaskModesUI();
-    // Re-render after transition only if batch mode was active (to clear batch-selected styles)
-    if (!isDeleteTasksMode && wasBatchMode) {
-        setTimeout(() => renderTasks(), 320);
-    }
 });
 
 function updateTaskModesUI() {
