@@ -1686,10 +1686,9 @@ function init() {
 }
 
 // --- THEME ---
-function applyThemeColor(color) {
+function applyThemeColor(color, save = true) {
     if(!color) color = '#6366f1';
     root.style.setProperty('--accent-color', color);
-    // Convert hex to rgb for glow
     let r = 0, g = 0, b = 0;
     if (color.length === 7) {
         r = parseInt(color.slice(1, 3), 16);
@@ -1697,8 +1696,19 @@ function applyThemeColor(color) {
         b = parseInt(color.slice(5, 7), 16);
     }
     root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.4)`);
-    state.accentColor = color;
-    saveState();
+    if (save) {
+        state.accentColor = color;
+        saveState();
+    }
+}
+
+function applyDayColor() {
+    const currentDay = state.days.find(d => d.id === currentDayId);
+    if (currentDay && currentDay.color && currentDay.color !== '#ffffff') {
+        applyThemeColor(currentDay.color, false); // apply without saving as global
+    } else {
+        applyThemeColor(state.accentColor, false); // restore global
+    }
 }
 
 colorPicker.addEventListener('input', (e) => {
@@ -1879,6 +1889,7 @@ function updateMainView() {
     if (state.days.length === 0) {
         mainContent.style.display = 'none';
         globalEmptyState.style.display = 'flex';
+        applyThemeColor(state.accentColor, false); // restore global when no days
         return;
     } else {
         mainContent.style.display = 'flex';
@@ -1892,15 +1903,14 @@ function updateMainView() {
     const currentDay = state.days.find(d => d.id === currentDayId);
     if (!currentDay) return;
 
+    // Apply this day's color (or global if none)
+    applyDayColor();
+
     currentDayTitle.textContent = currentDay.name;
-    if (currentDay.color && currentDay.color !== '#ffffff') {
-        currentDayTitle.style.color = currentDay.color;
-    } else {
-        currentDayTitle.style.color = '';
-    }
+    currentDayTitle.style.color = ''; // color comes from --accent-color now
 
     const taskCount = (state.tasks[currentDayId] || []).length;
-    currentDaySubtitle.textContent = `${taskCount} task${taskCount !== 1 ? 's' : ''}`;
+    currentDaySubtitle.textContent = `${taskCount} tarea${taskCount !== 1 ? 's' : ''}`;
     
     editTasksBtn.style.display = 'inline-flex';
     deleteTasksBtn.style.display = 'inline-flex';
@@ -2034,7 +2044,7 @@ function triggerNewDay() {
     dayModalTitle.textContent = translations[state.language]?.newDayTitle || 'Nuevo Día';
     dayIdInput.value = '';
     dayNameInput.value = '';
-    setDayColorPreview('#ffffff');
+    setDayColorPreview(state.accentColor); // default to global accent
     openModal(dayModal);
     setTimeout(() => dayNameInput.focus(), 100);
 }
@@ -2044,9 +2054,9 @@ globalAddDayBtn.addEventListener('click', triggerNewDay);
 
 saveDayBtn.addEventListener('click', () => {
     const name = dayNameInput.value.trim();
-    const color = dayColorInput.value;
+    const color = dayColorInput.value || state.accentColor;
     if (!name) {
-        alert("Day name is required!");
+        alert(state.language === 'es' ? '¡El nombre del día es obligatorio!' : 'Day name is required!');
         return;
     }
 
