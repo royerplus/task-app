@@ -1173,6 +1173,72 @@ select.form-select:focus {
     }
 }
 
+/* ============================
+   Interactive Mode Animation
+   ============================ */
+
+@keyframes borderPulseEdit {
+    0%   { box-shadow: 0 0 0 0px color-mix(in srgb, var(--accent-color) 60%, transparent),
+                       inset 0 0 0 2px color-mix(in srgb, var(--accent-color) 60%, transparent); }
+    50%  { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-color) 0%, transparent),
+                       inset 0 0 0 2px var(--accent-color); }
+    100% { box-shadow: 0 0 0 0px color-mix(in srgb, var(--accent-color) 60%, transparent),
+                       inset 0 0 0 2px color-mix(in srgb, var(--accent-color) 60%, transparent); }
+}
+
+@keyframes borderPulseDelete {
+    0%   { box-shadow: 0 0 0 0px color-mix(in srgb, var(--danger-color) 60%, transparent),
+                       inset 0 0 0 2px color-mix(in srgb, var(--danger-color) 60%, transparent); }
+    50%  { box-shadow: 0 0 0 6px color-mix(in srgb, var(--danger-color) 0%, transparent),
+                       inset 0 0 0 2px var(--danger-color); }
+    100% { box-shadow: 0 0 0 0px color-mix(in srgb, var(--danger-color) 60%, transparent),
+                       inset 0 0 0 2px color-mix(in srgb, var(--danger-color) 60%, transparent); }
+}
+
+/* Edit mode: accent-color border */
+.tasks-grid--edit-mode .task-card {
+    cursor: pointer !important;
+    animation: borderPulseEdit 1.8s ease-in-out infinite;
+    border-color: color-mix(in srgb, var(--accent-color) 70%, transparent);
+    transform: none !important;
+    transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.tasks-grid--edit-mode .task-card:hover {
+    transform: scale(1.02) !important;
+    filter: brightness(1.08);
+    animation-play-state: paused;
+    box-shadow: 0 0 0 2px var(--accent-color), var(--shadow-md);
+}
+
+/* Delete mode: danger-color border */
+.tasks-grid--delete-mode .task-card {
+    cursor: pointer !important;
+    animation: borderPulseDelete 1.8s ease-in-out infinite;
+    border-color: color-mix(in srgb, var(--danger-color) 70%, transparent);
+    transform: none !important;
+    transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.tasks-grid--delete-mode .task-card:hover {
+    transform: scale(1.02) !important;
+    filter: brightness(1.08);
+    animation-play-state: paused;
+    box-shadow: 0 0 0 2px var(--danger-color), var(--shadow-md);
+}
+
+/* Stagger animation per card for a wave feel */
+.tasks-grid--edit-mode .task-card:nth-child(2),
+.tasks-grid--delete-mode .task-card:nth-child(2) { animation-delay: 0.15s; }
+.tasks-grid--edit-mode .task-card:nth-child(3),
+.tasks-grid--delete-mode .task-card:nth-child(3) { animation-delay: 0.3s; }
+.tasks-grid--edit-mode .task-card:nth-child(4),
+.tasks-grid--delete-mode .task-card:nth-child(4) { animation-delay: 0.45s; }
+.tasks-grid--edit-mode .task-card:nth-child(5),
+.tasks-grid--delete-mode .task-card:nth-child(5) { animation-delay: 0.6s; }
+.tasks-grid--edit-mode .task-card:nth-child(6),
+.tasks-grid--delete-mode .task-card:nth-child(6) { animation-delay: 0.75s; }
+
 </style>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1762,6 +1828,10 @@ deleteTasksBtn.addEventListener('click', () => {
 function updateTaskModesUI() {
     editTasksBtn.classList.toggle('active-mode', isEditTasksMode);
     deleteTasksBtn.classList.toggle('active-mode-danger', isDeleteTasksMode);
+
+    // Animated border on task cards to signal interactivity
+    tasksGrid.classList.toggle('tasks-grid--edit-mode', isEditTasksMode);
+    tasksGrid.classList.toggle('tasks-grid--delete-mode', isDeleteTasksMode);
 }
 
 // Mobile menu & Swipe to close
