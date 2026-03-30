@@ -1252,6 +1252,58 @@ select.form-select:focus {
 .tasks-grid--edit-mode .task-card:nth-child(6)::after,
 .tasks-grid--delete-mode .task-card:nth-child(6)::after { animation-delay: 0.75s; }
 
+/* Batch Delete Mode */
+.batch-delete-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-surface-elevated);
+    border-top: 1px solid var(--border-color);
+    padding: 16px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transform: translateY(100%);
+    transition: transform var(--transition-slow);
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+}
+
+.batch-delete-bar.active {
+    transform: translateY(0);
+}
+
+.batch-delete-bar span {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.task-card.batch-selected {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 2px var(--danger-color);
+}
+
+.task-card.batch-selected::before {
+    content: '✓';
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 24px;
+    height: 24px;
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 2;
+    box-shadow: var(--shadow-sm);
+    animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
 </style>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1327,9 +1379,17 @@ select.form-select:focus {
             </div>
 
             <!-- Floating Action Button -->
-            <button class="fab" id="add-task-btn" title="Add New Task" data-i18n-title="addTaskTitle" style="display: none;">
+            <button class="fab" id="add-task-btn" title="Add New Task" data-i18n-title="addTaskTitle" style="display: none; transition: transform var(--transition-fast);">
                 <i class="ph ph-plus"></i>
             </button>
+            <!-- Batch Delete Bar -->
+            <div class="batch-delete-bar" id="batch-delete-bar">
+                <span id="batch-delete-count">0 selected</span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" id="cancel-batch-btn" style="color: white">Cancel</button>
+                    <button class="btn btn-primary" id="confirm-batch-btn" style="background-color: var(--danger-color); color: white;">Delete</button>
+                </div>
+            </div>
         </main>
         
         <!-- Global Empty State -->
@@ -1716,8 +1776,15 @@ const globalEmptyState = document.getElementById('global-empty-state');
 const globalAddDayBtn = document.getElementById('global-add-day-btn');
 const mainContent = document.querySelector('.main-content');
 
+const batchDeleteBar = document.getElementById('batch-delete-bar');
+const batchDeleteCount = document.getElementById('batch-delete-count');
+const cancelBatchBtn = document.getElementById('cancel-batch-btn');
+const confirmBatchBtn = document.getElementById('confirm-batch-btn');
+
 let isEditTasksMode = false;
 let isDeleteTasksMode = false;
+let isBatchDeleteMode = false;
+let selectedTasksForDeletion = new Set();
 
 // Image state
 let currentImageUrl = null;
@@ -1849,6 +1916,10 @@ editTasksBtn.addEventListener('click', () => {
 deleteTasksBtn.addEventListener('click', () => {
     isDeleteTasksMode = !isDeleteTasksMode;
     isEditTasksMode = false;
+    if (!isDeleteTasksMode) {
+        isBatchDeleteMode = false;
+        selectedTasksForDeletion.clear();
+    }
     updateTaskModesUI();
 });
 
@@ -1859,7 +1930,55 @@ function updateTaskModesUI() {
     // Animated border on task cards to signal interactivity
     tasksGrid.classList.toggle('tasks-grid--edit-mode', isEditTasksMode);
     tasksGrid.classList.toggle('tasks-grid--delete-mode', isDeleteTasksMode);
+
+    if (isBatchDeleteMode) {
+        batchDeleteBar.classList.add('active');
+        if (state.language === 'es') {
+            batchDeleteCount.textContent = `${selectedTasksForDeletion.size} seleccionada${selectedTasksForDeletion.size !== 1 ? 's' : ''}`;
+        } else {
+            batchDeleteCount.textContent = `${selectedTasksForDeletion.size} selected`;
+        }
+        addTaskBtn.style.transform = 'translateY(-80px)'; // move fab up
+    } else {
+        batchDeleteBar.classList.remove('active');
+        addTaskBtn.style.transform = 'translateY(0)'; // restore fab
+    }
 }
+
+// Batch Delete Handlers
+cancelBatchBtn.addEventListener('click', () => {
+    isBatchDeleteMode = false;
+    selectedTasksForDeletion.clear();
+    updateTaskModesUI();
+    renderTasks();
+});
+
+confirmBatchBtn.addEventListener('click', () => {
+    if (selectedTasksForDeletion.size === 0) return;
+    showConfirm({
+        icon: '🗑️',
+        title: state.language === 'es' ? 'Eliminar tareas' : 'Delete tasks',
+        desc: state.language === 'es' 
+            ? `¿Seguro que quieres eliminar ${selectedTasksForDeletion.size} tareas? Esta acción no se puede deshacer.` 
+            : `Are you sure you want to delete ${selectedTasksForDeletion.size} tasks? This cannot be undone.`,
+        okText: state.language === 'es' ? 'Sí, eliminar' : 'Yes, delete',
+        cancelText: state.language === 'es' ? 'Cancelar' : 'Cancel',
+        onOk: () => {
+            const dayTasks = state.tasks[currentDayId] || [];
+            selectedTasksForDeletion.forEach(id => {
+                const index = dayTasks.findIndex(t => t.id === id);
+                if (index !== -1) dayTasks.splice(index, 1);
+                if (currentUser) deleteTaskFirebase(currentDayId, id);
+            });
+            isBatchDeleteMode = false;
+            selectedTasksForDeletion.clear();
+            saveState();
+            updateTaskModesUI();
+            renderTasks();
+            renderDays(); // update count
+        }
+    });
+});
 
 // Mobile menu & Swipe to close
 const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -2039,6 +2158,10 @@ function renderTasks() {
             if (task.completed) {
                 card.classList.add('completed');
             }
+            if (isBatchDeleteMode && selectedTasksForDeletion.has(task.id)) {
+                card.classList.add('batch-selected');
+                card.classList.remove('completed');
+            }
             card.dataset.id = task.id;
             card.draggable = true; // For custom drag & drop
 
@@ -2068,9 +2191,45 @@ function renderTasks() {
                 </div>
             `;
 
+            let isLongPressActivated = false;
+            let pressTimer;
+            const startPress = (e) => {
+                if (!isDeleteTasksMode || isBatchDeleteMode) return;
+                isLongPressActivated = false;
+                pressTimer = setTimeout(() => {
+                    isLongPressActivated = true;
+                    isBatchDeleteMode = true;
+                    selectedTasksForDeletion.add(task.id);
+                    updateTaskModesUI();
+                    renderTasks();
+                }, 500);
+            };
+            const cancelPress = () => clearTimeout(pressTimer);
+            card.addEventListener('mousedown', startPress);
+            card.addEventListener('touchstart', startPress, {passive: true});
+            card.addEventListener('mouseup', cancelPress);
+            card.addEventListener('mouseleave', cancelPress);
+            card.addEventListener('touchend', cancelPress);
+            card.addEventListener('touchcancel', cancelPress);
+
             // Make whole card clickable to toggle completion or modes
             card.addEventListener('click', () => {
-                if (isEditTasksMode) {
+                if (isLongPressActivated) {
+                    isLongPressActivated = false;
+                    return;
+                }
+                if (isBatchDeleteMode) {
+                    if (selectedTasksForDeletion.has(task.id)) {
+                        selectedTasksForDeletion.delete(task.id);
+                        if (selectedTasksForDeletion.size === 0) {
+                            isBatchDeleteMode = false;
+                        }
+                    } else {
+                        selectedTasksForDeletion.add(task.id);
+                    }
+                    updateTaskModesUI();
+                    renderTasks();
+                } else if (isEditTasksMode) {
                     openTaskModal(task);
                 } else if (isDeleteTasksMode) {
                     deleteTask(task.id);
