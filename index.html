@@ -2363,6 +2363,15 @@ addTaskBtn.addEventListener('click', () => openTaskModal());
 function openTaskModal(task = null) {
     if (!currentDayId) return;
     
+    // Si había modo activo, salir limpiamente y limpiar selección
+    if (isEditTasksMode || isDeleteTasksMode) {
+        isEditTasksMode = false;
+        isDeleteTasksMode = false;
+        selectedTasksForDeletion.clear();
+        updateTaskModesUI();
+        renderTasks(); // re-render para quitar marcas visuales
+    }
+    
     const t = translations[state.language];
 
     if (task) {
