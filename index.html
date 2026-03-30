@@ -1918,6 +1918,11 @@ dayColorPreview.addEventListener('click', () => {
 editTasksBtn.addEventListener('click', () => {
     isEditTasksMode = !isEditTasksMode;
     isDeleteTasksMode = false;
+    if (isBatchDeleteMode) {
+        isBatchDeleteMode = false;
+        selectedTasksForDeletion.clear();
+        renderTasks();
+    }
     updateTaskModesUI();
 });
 
@@ -2362,27 +2367,16 @@ addTaskBtn.addEventListener('click', () => openTaskModal());
 
 function openTaskModal(task = null) {
     if (!currentDayId) return;
-
-    // Capturar datos de la tarea ANTES de limpiar modos
-    const taskData = task ? { ...task } : null;
-
-    // Limpiar cualquier modo activo y selección
-    isEditTasksMode = false;
-    isDeleteTasksMode = false;
-    isBatchDeleteMode = false;
-    selectedTasksForDeletion.clear();
-    updateTaskModesUI();
-    renderTasks(); // quitar marcas visuales
-
+    
     const t = translations[state.language];
 
-    if (taskData) {
+    if (task) {
         taskModalTitle.textContent = t.editTaskTitle || (state.language === 'es' ? 'Editar Tarea' : 'Edit Task');
-        taskIdInput.value = taskData.id;
-        taskTitleInput.value = taskData.title;
-        taskDescInput.value = taskData.description;
-        const pos = taskData.imagePosition || { x: 50, y: 50 };
-        setCoverImagePreview(taskData.imageURL || null, pos);
+        taskIdInput.value = task.id;
+        taskTitleInput.value = task.title;
+        taskDescInput.value = task.description;
+        const pos = task.imagePosition || { x: 50, y: 50 };
+        setCoverImagePreview(task.imageURL || null, pos);
     } else {
         taskModalTitle.textContent = t.newTaskTitle || (state.language === 'es' ? 'Nueva Tarea' : 'New Task');
         taskIdInput.value = '';
@@ -2390,7 +2384,7 @@ function openTaskModal(task = null) {
         taskDescInput.value = '';
         setCoverImagePreview(null);
     }
-
+    
     openModal(taskModal);
     if (window.innerWidth > 768) {
         setTimeout(() => taskTitleInput.focus(), 100);
