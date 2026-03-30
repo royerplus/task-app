@@ -2650,7 +2650,7 @@ posPickerConfirm.addEventListener('click', async () => {
 
         currentImageUrl = uploadUrl;
         currentImagePosition = { x: posXpct, y: posYpct };
-        setCoverImagePreview(uploadUrl, currentImagePosition);
+        setCoverImagePreview(uploadUrl, currentImagePosition, currentImageAspectRatio);
         // setCoverImagePreview hides the icon/span and shows the image
 
     } catch(e) {
