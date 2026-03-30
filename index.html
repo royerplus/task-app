@@ -1928,7 +1928,9 @@ function renderDays() {
             dayNameInput.value = day.name;
             setDayColorPreview(day.color || '#ffffff');
             openModal(dayModal);
-            setTimeout(() => dayNameInput.focus(), 100);
+            if (window.innerWidth > 768) {
+                setTimeout(() => dayNameInput.focus(), 100);
+            }
         });
 
         const deleteBtn = document.createElement('button');
@@ -2143,7 +2145,9 @@ function triggerNewDay() {
     dayNameInput.value = '';
     setDayColorPreview(state.accentColor); // default to global accent
     openModal(dayModal);
-    setTimeout(() => dayNameInput.focus(), 100);
+    if (window.innerWidth > 768) {
+        setTimeout(() => dayNameInput.focus(), 100);
+    }
 }
 
 addDayBtn.addEventListener('click', triggerNewDay);
@@ -2209,7 +2213,9 @@ function openTaskModal(task = null) {
     }
     
     openModal(taskModal);
-    setTimeout(() => taskTitleInput.focus(), 100);
+    if (window.innerWidth > 768) {
+        setTimeout(() => taskTitleInput.focus(), 100);
+    }
 }
 
 function setCoverImagePreview(url, position) {
