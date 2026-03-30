@@ -1936,12 +1936,16 @@ editTasksBtn.addEventListener('click', () => {
 deleteTasksBtn.addEventListener('click', () => {
     isDeleteTasksMode = !isDeleteTasksMode;
     isEditTasksMode = false;
+    const wasBatchMode = isBatchDeleteMode;
     if (!isDeleteTasksMode) {
         isBatchDeleteMode = false;
         selectedTasksForDeletion.clear();
-        renderTasks();
     }
     updateTaskModesUI();
+    // Re-render after transition only if batch mode was active (to clear batch-selected styles)
+    if (!isDeleteTasksMode && wasBatchMode) {
+        setTimeout(() => renderTasks(), 320);
+    }
 });
 
 function updateTaskModesUI() {
