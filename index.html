@@ -1228,7 +1228,13 @@ select.form-select:focus {
 .tasks-grid--delete-mode .task-card::after {
     opacity: 1;
     box-shadow: inset 0 0 0 1px var(--danger-color);
+    transition: opacity 0s, box-shadow 0s 0s; /* instant: skip base 0.3s box-shadow delay */
     animation: borderPulseDelete 1.8s ease-in-out infinite;
+}
+
+/* Fade-out when exiting delete mode (0.5s) */
+.tasks-grid.is-exiting-delete .task-card::after {
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0s 0.6s;
 }
 
 .tasks-grid--delete-mode .task-card:hover {
@@ -1944,9 +1950,16 @@ deleteTasksBtn.addEventListener('click', () => {
     if (!isDeleteTasksMode) {
         isBatchDeleteMode = false;
         selectedTasksForDeletion.clear();
-        renderTasks();
+        // Add exit class BEFORE removing delete-mode so 0.5s fade applies
+        tasksGrid.classList.add('is-exiting-delete');
+        updateTaskModesUI(); // removes tasks-grid--delete-mode → triggers fade
+        setTimeout(() => {
+            tasksGrid.classList.remove('is-exiting-delete');
+            renderTasks();
+        }, 520);
+    } else {
+        updateTaskModesUI();
     }
-    updateTaskModesUI();
 });
 
 function updateTaskModesUI() {
