@@ -1227,6 +1227,7 @@ select.form-select:focus {
 
 .tasks-grid--delete-mode .task-card::after {
     opacity: 1;
+    box-shadow: inset 0 0 0 1px var(--danger-color);
     animation: borderPulseDelete 1.8s ease-in-out infinite;
 }
 
@@ -1254,19 +1255,20 @@ select.form-select:focus {
 
 /* Batch Delete Mode */
 .batch-delete-bar {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     background-color: var(--bg-surface-elevated);
     border-top: 1px solid var(--border-color);
     padding: 16px 48px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     display: flex;
     justify-content: space-between;
     align-items: center;
     transform: translateY(100%);
     transition: transform var(--transition-slow);
-    z-index: 100;
+    z-index: 1000;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
 }
 
@@ -1386,8 +1388,8 @@ select.form-select:focus {
             <div class="batch-delete-bar" id="batch-delete-bar">
                 <span id="batch-delete-count">0 selected</span>
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-secondary" id="cancel-batch-btn" style="color: white">Cancel</button>
-                    <button class="btn btn-primary" id="confirm-batch-btn" style="background-color: var(--danger-color); color: white;">Delete</button>
+                    <button class="btn btn-secondary" id="cancel-batch-btn" style="color: white" data-i18n="cancelBtn">Cancel</button>
+                    <button class="btn btn-primary" id="confirm-batch-btn" style="background-color: var(--danger-color); color: white;" data-i18n="confirmBatchBtn">Delete</button>
                 </div>
             </div>
         </main>
@@ -1634,7 +1636,8 @@ const translations = {
         posPickerTitle: "Adjust image",
         posPickerDesc: "Drag to choose which part shows on the card.",
         posPickerCancel: "Cancel",
-        posPickerConfirm: "Confirm"
+        posPickerConfirm: "Confirm",
+        confirmBatchBtn: "Delete"
     },
     es: {
         pageTitle: "Taskflow | Gestor de Tareas Premium",
@@ -1673,7 +1676,8 @@ const translations = {
         posPickerTitle: "Ajustar imagen",
         posPickerDesc: "Arrastra la imagen para elegir qué parte se muestra en la tarjeta.",
         posPickerCancel: "Cancelar",
-        posPickerConfirm: "Confirmar"
+        posPickerConfirm: "Confirmar",
+        confirmBatchBtn: "Eliminar"
     }
 };
 
