@@ -1198,15 +1198,21 @@ select.form-select:focus {
 /* Edit mode: accent-color border */
 .tasks-grid--edit-mode .task-card {
     cursor: pointer !important;
-    animation: borderPulseEdit 1.8s ease-in-out infinite;
-    border-color: color-mix(in srgb, var(--accent-color) 70%, transparent);
     transform: none !important;
     transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.tasks-grid--edit-mode .task-card::after {
+    opacity: 1;
+    animation: borderPulseEdit 1.8s ease-in-out infinite;
 }
 
 .tasks-grid--edit-mode .task-card:hover {
     transform: scale(1.02) !important;
     filter: brightness(1.08);
+}
+
+.tasks-grid--edit-mode .task-card:hover::after {
     animation-play-state: paused;
     box-shadow: 0 0 0 2px var(--accent-color), var(--shadow-md);
 }
@@ -1214,30 +1220,36 @@ select.form-select:focus {
 /* Delete mode: danger-color border */
 .tasks-grid--delete-mode .task-card {
     cursor: pointer !important;
-    animation: borderPulseDelete 1.8s ease-in-out infinite;
-    border-color: color-mix(in srgb, var(--danger-color) 70%, transparent);
     transform: none !important;
     transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.tasks-grid--delete-mode .task-card::after {
+    opacity: 1;
+    animation: borderPulseDelete 1.8s ease-in-out infinite;
 }
 
 .tasks-grid--delete-mode .task-card:hover {
     transform: scale(1.02) !important;
     filter: brightness(1.08);
+}
+
+.tasks-grid--delete-mode .task-card:hover::after {
     animation-play-state: paused;
     box-shadow: 0 0 0 2px var(--danger-color), var(--shadow-md);
 }
 
 /* Stagger animation per card for a wave feel */
-.tasks-grid--edit-mode .task-card:nth-child(2),
-.tasks-grid--delete-mode .task-card:nth-child(2) { animation-delay: 0.15s; }
-.tasks-grid--edit-mode .task-card:nth-child(3),
-.tasks-grid--delete-mode .task-card:nth-child(3) { animation-delay: 0.3s; }
-.tasks-grid--edit-mode .task-card:nth-child(4),
-.tasks-grid--delete-mode .task-card:nth-child(4) { animation-delay: 0.45s; }
-.tasks-grid--edit-mode .task-card:nth-child(5),
-.tasks-grid--delete-mode .task-card:nth-child(5) { animation-delay: 0.6s; }
-.tasks-grid--edit-mode .task-card:nth-child(6),
-.tasks-grid--delete-mode .task-card:nth-child(6) { animation-delay: 0.75s; }
+.tasks-grid--edit-mode .task-card:nth-child(2)::after,
+.tasks-grid--delete-mode .task-card:nth-child(2)::after { animation-delay: 0.15s; }
+.tasks-grid--edit-mode .task-card:nth-child(3)::after,
+.tasks-grid--delete-mode .task-card:nth-child(3)::after { animation-delay: 0.3s; }
+.tasks-grid--edit-mode .task-card:nth-child(4)::after,
+.tasks-grid--delete-mode .task-card:nth-child(4)::after { animation-delay: 0.45s; }
+.tasks-grid--edit-mode .task-card:nth-child(5)::after,
+.tasks-grid--delete-mode .task-card:nth-child(5)::after { animation-delay: 0.6s; }
+.tasks-grid--edit-mode .task-card:nth-child(6)::after,
+.tasks-grid--delete-mode .task-card:nth-child(6)::after { animation-delay: 0.75s; }
 
 </style>
     <!-- Google Fonts -->
@@ -2164,15 +2176,17 @@ addTaskBtn.addEventListener('click', () => openTaskModal());
 function openTaskModal(task = null) {
     if (!currentDayId) return;
     
+    const t = translations[state.language];
+
     if (task) {
-        taskModalTitle.textContent = 'Edit Task';
+        taskModalTitle.textContent = t.editTaskTitle || (state.language === 'es' ? 'Editar Tarea' : 'Edit Task');
         taskIdInput.value = task.id;
         taskTitleInput.value = task.title;
         taskDescInput.value = task.description;
         const pos = task.imagePosition || { x: 50, y: 50 };
         setCoverImagePreview(task.imageURL || null, pos);
     } else {
-        taskModalTitle.textContent = 'New Task';
+        taskModalTitle.textContent = t.newTaskTitle || (state.language === 'es' ? 'Nueva Tarea' : 'New Task');
         taskIdInput.value = '';
         taskTitleInput.value = '';
         taskDescInput.value = '';
