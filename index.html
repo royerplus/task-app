@@ -2150,6 +2150,8 @@ function updateMainView() {
 
     isEditTasksMode = false;
     isDeleteTasksMode = false;
+    isBatchDeleteMode = false;
+    selectedTasksForDeletion.clear();
     updateTaskModesUI();
 
     renderTasks();
