@@ -426,7 +426,7 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: inset 0 0 0 1px var(--accent-color);
     opacity: 0;
-    transition: opacity var(--transition-slow), box-shadow 0s var(--transition-slow); 
+    transition: opacity var(--transition-slow), box-shadow 0s 0.3s; 
     pointer-events: none;
 }
 
@@ -1927,6 +1927,7 @@ deleteTasksBtn.addEventListener('click', () => {
     if (!isDeleteTasksMode) {
         isBatchDeleteMode = false;
         selectedTasksForDeletion.clear();
+        renderTasks();
     }
     updateTaskModesUI();
 });
