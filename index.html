@@ -1585,11 +1585,7 @@ select.form-select:focus {
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <h2 data-i18n="sidebarTitle">Taskflow</h2>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div class="theme-accent-picker" title="Change Accent Color" data-i18n-title="changeColorTitle">
-                        <input type="color" id="accent-color-picker" value="#6366f1">
-                    </div>
-                </div>
+
             </div>
             <div class="days-list-header">
                 <h3 data-i18n="daysHeader">Days</h3>
@@ -1729,6 +1725,20 @@ select.form-select:focus {
                         <option value="es" selected>Español</option>
                     </select>
                 </div>
+                <!-- Color predeterminado para nuevos días -->
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label style="margin-bottom:10px; display:block;">Color predeterminado para nuevos días</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div id="settings-accent-preview" style="width:40px; height:40px; border-radius:var(--radius-sm); border:1px solid var(--border-color); cursor:pointer; flex-shrink:0; transition:transform var(--transition-fast); box-shadow: 0 2px 8px rgba(0,0,0,0.3);" title="Cambiar color"></div>
+                        <div>
+                            <div id="settings-accent-hex" style="font-family:monospace; font-size:0.9rem; color:var(--text-primary); font-weight:600;">#6366f1</div>
+                            <div style="font-size:0.75rem; color:var(--text-tertiary); margin-top:2px;">Color de acento global</div>
+                        </div>
+                        <div id="settings-fav-btn" style="display:none; margin-left:auto; background:color-mix(in srgb, var(--accent-color) 15%, transparent); border:1px solid color-mix(in srgb, var(--accent-color) 40%, transparent); border-radius:var(--radius-sm); padding:6px 10px; cursor:pointer; font-size:0.8rem; color:var(--accent-color); white-space:nowrap; transition:all var(--transition-fast);" title="Color favorito guardado — clic para aplicar">
+                            ★ <span id="settings-fav-hex"></span>
+                        </div>
+                    </div>
+                </div>
                 <div class="credits">
                     <p data-i18n="creditsText">Created by Rogelio Espino Martinez</p>
                 </div>
@@ -1748,6 +1758,15 @@ select.form-select:focus {
     <div class="color-picker-overlay" id="color-picker-overlay">
         <div class="color-picker-box">
             <h3 id="color-picker-title">Color</h3>
+            <!-- Favorito guardado -->
+            <div id="color-picker-fav-row" style="display:none; margin-bottom:12px;">
+                <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-tertiary); margin-bottom:6px; font-weight:600;">★ Color favorito</div>
+                <div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg-base); border-radius:var(--radius-sm); border:1px solid var(--border-color); cursor:pointer;" id="color-picker-fav-swatch">
+                    <div id="color-picker-fav-dot" style="width:28px; height:28px; border-radius:6px; flex-shrink:0; border:1px solid rgba(255,255,255,0.1);"></div>
+                    <span id="color-picker-fav-label-hex" style="font-family:monospace; font-size:0.88rem; color:var(--text-secondary);"></span>
+                    <span style="font-size:0.78rem; color:var(--text-tertiary); margin-left:auto;">Toca para usar</span>
+                </div>
+            </div>
             <div class="color-swatches" id="color-swatches"></div>
             <div class="color-picker-custom" id="color-picker-custom-btn">
                 <div class="color-picker-custom-preview" id="color-picker-custom-preview"></div>
@@ -1761,9 +1780,14 @@ select.form-select:focus {
                     <div class="color-picker-preview-hex" id="color-picker-preview-hex">#6366f1</div>
                 </div>
             </div>
-            <div class="color-picker-footer">
-                <button class="btn btn-secondary" id="color-picker-cancel">Cancelar</button>
-                <button class="btn btn-primary" id="color-picker-ok">Aplicar</button>
+            <div class="color-picker-footer" style="justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <button class="btn btn-secondary" id="color-picker-save-fav" style="font-size:0.82rem; padding:8px 12px; display:flex; align-items:center; gap:6px;">
+                    <i class="ph ph-star"></i> <span id="color-picker-save-fav-label">Conservar color</span>
+                </button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-secondary" id="color-picker-cancel">Cancelar</button>
+                    <button class="btn btn-primary" id="color-picker-ok">Aplicar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2049,7 +2073,8 @@ function generateId() {
 
 // --- DOM ELEMENTS ---
 const root = document.documentElement;
-const colorPicker = document.getElementById('accent-color-picker');
+// accent-color-picker moved to settings
+const colorPicker = { value: '' }; // stub — picker now in settings
 
 const sidebar = document.getElementById('sidebar');
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -2128,7 +2153,8 @@ const saveTaskBtn = document.getElementById('save-task-btn');
 // --- INITIALIZATION ---
 function init() {
     applyThemeColor(state.accentColor);
-    colorPicker.value = state.accentColor;
+    // colorPicker stub
+    setTimeout(updateSettingsColorUI, 0);
     languageSelect.value = state.language;
     updateLanguage();
     
@@ -2166,22 +2192,7 @@ function applyDayColor() {
     }
 }
 
-colorPicker.addEventListener('input', (e) => {
-    applyThemeColor(e.target.value);
-});
-
-// Open custom color picker for accent color
-document.querySelector('.theme-accent-picker').addEventListener('click', (e) => {
-    e.preventDefault();
-    showColorPicker({
-        title: state.language === 'es' ? 'Color de acento' : 'Accent color',
-        current: state.accentColor,
-        onApply: (color) => {
-            applyThemeColor(color);
-            colorPicker.value = color;
-        }
-    });
-});
+// theme-accent-picker in sidebar removed — now handled via settings modal
 
 // Day color picker
 const dayColorPreview = document.getElementById('day-color-preview');
@@ -3223,6 +3234,104 @@ colorPickerOk.addEventListener('click', () => {
 colorPickerOverlay.addEventListener('click', (e) => {
     if (e.target === colorPickerOverlay) colorPickerOverlay.classList.remove('active');
 });
+
+// ===== COLOR PREDETERMINADO EN SETTINGS =====
+const settingsAccentPreview = document.getElementById('settings-accent-preview');
+const settingsAccentHex     = document.getElementById('settings-accent-hex');
+const settingsFavBtn        = document.getElementById('settings-fav-btn');
+const settingsFavHex        = document.getElementById('settings-fav-hex');
+const colorPickerSaveFav    = document.getElementById('color-picker-save-fav');
+const colorPickerSaveFavLbl = document.getElementById('color-picker-save-fav-label');
+const colorPickerFavRow     = document.getElementById('color-picker-fav-row');
+const colorPickerFavDot     = document.getElementById('color-picker-fav-dot');
+const colorPickerFavLblHex  = document.getElementById('color-picker-fav-label-hex');
+const colorPickerFavSwatch  = document.getElementById('color-picker-fav-swatch');
+
+// Load saved favorite from localStorage
+function getFavColor() {
+    return localStorage.getItem('taskflow_fav_color') || null;
+}
+function setFavColor(c) {
+    localStorage.setItem('taskflow_fav_color', c);
+}
+
+function updateSettingsColorUI() {
+    settingsAccentPreview.style.backgroundColor = state.accentColor;
+    settingsAccentHex.textContent = state.accentColor;
+    const fav = getFavColor();
+    if (fav) {
+        settingsFavBtn.style.display = 'flex';
+        settingsFavHex.textContent = fav;
+        settingsFavBtn.style.setProperty('--fav-color', fav);
+    } else {
+        settingsFavBtn.style.display = 'none';
+    }
+}
+
+function updateColorPickerFavRow() {
+    const fav = getFavColor();
+    if (fav) {
+        colorPickerFavRow.style.display = 'block';
+        colorPickerFavDot.style.backgroundColor = fav;
+        colorPickerFavLblHex.textContent = fav;
+    } else {
+        colorPickerFavRow.style.display = 'none';
+    }
+}
+
+// Clic en preview de settings → abre el color picker
+settingsAccentPreview.addEventListener('click', () => {
+    updateColorPickerFavRow();
+    showColorPicker({
+        title: state.language === 'es' ? 'Color predeterminado' : 'Default color',
+        current: state.accentColor,
+        onApply: (color) => {
+            applyThemeColor(color);
+            updateSettingsColorUI();
+        }
+    });
+});
+
+// Clic en favorito guardado en settings → aplica directo
+settingsFavBtn.addEventListener('click', () => {
+    const fav = getFavColor();
+    if (!fav) return;
+    applyThemeColor(fav);
+    updateSettingsColorUI();
+});
+
+// Botón "Conservar color" dentro del color picker
+colorPickerSaveFav.addEventListener('click', () => {
+    setFavColor(cpSelectedColor);
+    const lang = state.language;
+    colorPickerSaveFavLbl.textContent = lang === 'es' ? '¡Guardado!' : 'Saved!';
+    colorPickerSaveFav.style.borderColor = 'var(--accent-color)';
+    colorPickerSaveFav.style.color = 'var(--accent-color)';
+    updateColorPickerFavRow();
+    updateSettingsColorUI();
+    setTimeout(() => {
+        colorPickerSaveFavLbl.textContent = lang === 'es' ? 'Conservar color' : 'Save color';
+        colorPickerSaveFav.style.borderColor = '';
+        colorPickerSaveFav.style.color = '';
+    }, 1800);
+});
+
+// Clic en swatch favorito dentro del color picker → selecciona ese color
+colorPickerFavSwatch.addEventListener('click', () => {
+    const fav = getFavColor();
+    if (!fav) return;
+    cpSelectedColor = fav;
+    updateCPPreview();
+    colorSwatchesEl.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+});
+
+// Patch settingsBtn open to also update colors UI
+const _origSettingsBtnClick = settingsBtn.onclick;
+settingsBtn.addEventListener('click', () => {
+    updateSettingsColorUI();
+    updateColorPickerFavRow();
+});
+
 
 // --- CUSTOM CONFIRM MODAL ---
 const confirmOverlay = document.getElementById('confirm-modal-overlay');
