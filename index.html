@@ -1426,6 +1426,87 @@ select.form-select:focus {
     border-radius: var(--radius-full);
 }
 
+/* Sliders de ajuste de imagen */
+.img-adjust-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--bg-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+.img-adjust-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.img-adjust-label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    width: 62px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.img-adjust-label i { font-size: 0.95rem; }
+.img-adjust-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-color);
+    outline: none;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+.img-adjust-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    box-shadow: 0 0 6px var(--accent-glow);
+    transition: transform var(--transition-fast);
+}
+.img-adjust-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.img-adjust-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    border: none;
+}
+.img-adjust-value {
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: var(--text-tertiary);
+    width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+}
+.img-adjust-reset {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-left: auto;
+    display: block;
+}
+.img-adjust-reset:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
 /* ===== EFECTOS PERMANENTES ===== */
 
 /* FAB pulsando suave */
@@ -1722,6 +1803,25 @@ select.form-select:focus {
             <div class="pos-picker-viewport" id="pos-picker-viewport">
                 <img class="pos-picker-img" id="pos-picker-img" src="" alt="preview">
             </div>
+            <!-- Ajustes de imagen -->
+            <div class="img-adjust-panel">
+                <div class="img-adjust-row">
+                    <span class="img-adjust-label"><i class="ph ph-sun"></i>Brillo</span>
+                    <input type="range" class="img-adjust-slider" id="adj-brightness" min="50" max="200" value="100" step="1">
+                    <span class="img-adjust-value" id="adj-brightness-val">100%</span>
+                </div>
+                <div class="img-adjust-row">
+                    <span class="img-adjust-label"><i class="ph ph-circles-three-plus"></i>Contraste</span>
+                    <input type="range" class="img-adjust-slider" id="adj-contrast" min="50" max="200" value="100" step="1">
+                    <span class="img-adjust-value" id="adj-contrast-val">100%</span>
+                </div>
+                <div class="img-adjust-row">
+                    <span class="img-adjust-label"><i class="ph ph-aperture"></i>Nitidez</span>
+                    <input type="range" class="img-adjust-slider" id="adj-sharpen" min="0" max="100" value="0" step="1">
+                    <span class="img-adjust-value" id="adj-sharpen-val">0%</span>
+                </div>
+                <button class="img-adjust-reset" id="adj-reset">↺ Restablecer</button>
+            </div>
             <div class="pos-picker-footer" style="justify-content: space-between;">
                 <select id="pos-picker-ratio" class="form-select" style="width: auto; padding: 10px 32px 10px 12px;">
                     <option value="16/9">16:9</option>
@@ -1983,6 +2083,7 @@ let selectedTasksForDeletion = new Set();
 let currentImageUrl = null;
 let currentImagePosition = { x: 50, y: 50 }; // object-position percentages
 let currentImageAspectRatio = '16/9';
+let currentImageFilter = { brightness: 100, contrast: 100, sharpen: 0 };
 
 // Auth
 const loginScreen = document.getElementById('login-screen');
@@ -2380,7 +2481,9 @@ function renderTasks() {
                 const pos = task.imagePosition || { x: 50, y: 50 };
                 const ratio = task.imageAspectRatio || '16/9';
                 const styleRatio = ratio === 'auto' ? 'height: auto; aspect-ratio: auto;' : `height: auto; aspect-ratio: ${ratio};`;
-                coverHtml = `<img src="${task.imageURL}" alt="Cover" class="task-cover" style="object-position: ${pos.x}% ${pos.y}%; ${styleRatio}" data-lightbox="true">`;
+                const f = task.imageFilter || { brightness: 100, contrast: 100, sharpen: 0 };
+                const filterStr = buildCssFilter(f);
+                coverHtml = `<img src="${task.imageURL}" alt="Cover" class="task-cover" style="object-position: ${pos.x}% ${pos.y}%; ${styleRatio} filter: ${filterStr};" data-lightbox="true">`;
             }
 
             // Description HTML (truncation handled by CSS)
@@ -2584,13 +2687,15 @@ function openTaskModal(task = null) {
         taskDescInput.value = task.description;
         const pos = task.imagePosition || { x: 50, y: 50 };
         currentImageAspectRatio = task.imageAspectRatio || '16/9';
-        setCoverImagePreview(task.imageURL || null, pos, currentImageAspectRatio);
+        currentImageFilter = task.imageFilter || { brightness: 100, contrast: 100, sharpen: 0 };
+        setCoverImagePreview(task.imageURL || null, pos, currentImageAspectRatio, currentImageFilter);
     } else {
         taskModalTitle.textContent = t.newTaskTitle || (state.language === 'es' ? 'Nueva Tarea' : 'New Task');
         taskIdInput.value = '';
         taskTitleInput.value = '';
         taskDescInput.value = '';
         currentImageAspectRatio = '16/9';
+        currentImageFilter = { brightness: 100, contrast: 100, sharpen: 0 };
         setCoverImagePreview(null);
     }
     
@@ -2600,15 +2705,17 @@ function openTaskModal(task = null) {
     }
 }
 
-function setCoverImagePreview(url, position, ratio = '16/9') {
+function setCoverImagePreview(url, position, ratio = '16/9', filter = null) {
     currentImageUrl = url;
     if (position) currentImagePosition = position;
     if (ratio) currentImageAspectRatio = ratio;
     
+    if (filter) currentImageFilter = filter;
     if (url) {
         imagePreview.src = url;
         imagePreview.style.objectPosition = `${currentImagePosition.x}% ${currentImagePosition.y}%`;
         imagePreview.style.aspectRatio = currentImageAspectRatio === 'auto' ? 'auto' : currentImageAspectRatio;
+        imagePreview.style.filter = buildCssFilter(currentImageFilter);
         imagePreview.style.display = 'block';
         imagePreview.style.width = '100%';
         imagePreview.style.height = '100%';
@@ -2747,6 +2854,8 @@ function openPositionPicker(blob) {
         initPickerLayout();
     };
     posPickerImg.src = pickerState.blobUrl;
+    posPickerImg.style.filter = buildCssFilter(currentImageFilter);
+    syncSlidersToCurrent();
     posPickerOverlay.classList.add('active');
 }
 
@@ -2873,7 +2982,7 @@ posPickerConfirm.addEventListener('click', async () => {
 
         currentImageUrl = uploadUrl;
         currentImagePosition = { x: posXpct, y: posYpct };
-        setCoverImagePreview(uploadUrl, currentImagePosition, currentImageAspectRatio);
+        setCoverImagePreview(uploadUrl, currentImagePosition, currentImageAspectRatio, currentImageFilter);
         // setCoverImagePreview hides the icon/span and shows the image
 
     } catch(e) {
@@ -2986,6 +3095,7 @@ saveTaskBtn.addEventListener('click', () => {
             task.imageURL = currentImageUrl;
             task.imagePosition = currentImageUrl ? currentImagePosition : null;
             task.imageAspectRatio = currentImageUrl ? currentImageAspectRatio : '16/9';
+            task.imageFilter = currentImageUrl ? currentImageFilter : null;
             if (currentUser) saveTaskFirebase(currentDayId, task, state.tasks[currentDayId].indexOf(task));
         }
     } else {
@@ -2997,6 +3107,7 @@ saveTaskBtn.addEventListener('click', () => {
             imageURL: currentImageUrl,
             imagePosition: currentImageUrl ? currentImagePosition : null,
             imageAspectRatio: currentImageUrl ? currentImageAspectRatio : '16/9',
+            imageFilter: currentImageUrl ? currentImageFilter : null,
             completed: false,
             createdAt: Date.now()
         };
@@ -3497,6 +3608,53 @@ onAuthStateChanged(auth, async (user) => {
     }
     loop();
 })();
+
+// ===== AJUSTES DE IMAGEN =====
+function buildCssFilter(f) {
+    if (!f) return '';
+    var sharpenContrast = 1 + (f.sharpen / 100) * 0.4;
+    var sharpenSat = 1 + (f.sharpen / 100) * 0.15;
+    return 'brightness(' + f.brightness + '%) contrast(' + Math.round(f.contrast * sharpenContrast) + '%) saturate(' + sharpenSat.toFixed(2) + ')';
+}
+
+var adjBrightness    = document.getElementById('adj-brightness');
+var adjContrast      = document.getElementById('adj-contrast');
+var adjSharpen       = document.getElementById('adj-sharpen');
+var adjBrightnessVal = document.getElementById('adj-brightness-val');
+var adjContrastVal   = document.getElementById('adj-contrast-val');
+var adjSharpenVal    = document.getElementById('adj-sharpen-val');
+var adjReset         = document.getElementById('adj-reset');
+
+function syncSlidersToCurrent() {
+    adjBrightness.value = currentImageFilter.brightness;
+    adjContrast.value   = currentImageFilter.contrast;
+    adjSharpen.value    = currentImageFilter.sharpen;
+    adjBrightnessVal.textContent = currentImageFilter.brightness + '%';
+    adjContrastVal.textContent   = currentImageFilter.contrast + '%';
+    adjSharpenVal.textContent    = currentImageFilter.sharpen + '%';
+}
+
+function applyPickerFilter() {
+    currentImageFilter = {
+        brightness: parseInt(adjBrightness.value),
+        contrast:   parseInt(adjContrast.value),
+        sharpen:    parseInt(adjSharpen.value)
+    };
+    posPickerImg.style.filter = buildCssFilter(currentImageFilter);
+    adjBrightnessVal.textContent = currentImageFilter.brightness + '%';
+    adjContrastVal.textContent   = currentImageFilter.contrast + '%';
+    adjSharpenVal.textContent    = currentImageFilter.sharpen + '%';
+}
+
+adjBrightness.addEventListener('input', applyPickerFilter);
+adjContrast.addEventListener('input', applyPickerFilter);
+adjSharpen.addEventListener('input', applyPickerFilter);
+
+adjReset.addEventListener('click', function() {
+    currentImageFilter = { brightness: 100, contrast: 100, sharpen: 0 };
+    syncSlidersToCurrent();
+    posPickerImg.style.filter = '';
+});
 
 </script>
 </body>
