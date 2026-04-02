@@ -45,6 +45,8 @@ body {
 .app-container {
     display: flex;
     height: 100%;
+    position: relative;
+    z-index: 2;
 }
 
 /* Login Screen */
@@ -1461,68 +1463,46 @@ select.form-select:focus {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 9999;
+    z-index: 1;
     opacity: 0;
     transition: opacity 0.6s ease;
 }
 #luis-canvas.active { opacity: 1; }
 
-/* Aura del cursor */
-#luis-cursor-aura {
-    position: fixed;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.35) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 9998;
-    transform: translate(-50%, -50%);
-    display: none;
-    filter: blur(2px);
-    transition: width 0.15s, height 0.15s;
-}
-body.luis-mode #luis-cursor-aura { display: block; }
-
-/* Estrellas que explotan al hacer click */
-.luis-click-burst {
-    position: fixed;
-    pointer-events: none;
-    z-index: 9997;
-    transform: translate(-50%, -50%);
-    animation: luisBurstFade 0.7s ease forwards;
-}
-@keyframes luisBurstFade {
-    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+/* Cursor aura y click burst removidos */
     100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
 }
 
 /* Pulso en tarjetas */
-body.luis-mode .task-card {
+body.luis-mode .task-card:not(.completed):not(.batch-selected) {
     animation: luisCardPulse 3s ease-in-out infinite;
 }
-body.luis-mode .task-card:nth-child(2) { animation-delay: 0.4s; }
-body.luis-mode .task-card:nth-child(3) { animation-delay: 0.8s; }
-body.luis-mode .task-card:nth-child(4) { animation-delay: 1.2s; }
-body.luis-mode .task-card:nth-child(5) { animation-delay: 1.6s; }
-body.luis-mode .task-card:nth-child(6) { animation-delay: 2.0s; }
+body.luis-mode .task-card:not(.completed):not(.batch-selected):nth-child(2) { animation-delay: 0.4s; }
+body.luis-mode .task-card:not(.completed):not(.batch-selected):nth-child(3) { animation-delay: 0.8s; }
+body.luis-mode .task-card:not(.completed):not(.batch-selected):nth-child(4) { animation-delay: 1.2s; }
+body.luis-mode .task-card:not(.completed):not(.batch-selected):nth-child(5) { animation-delay: 1.6s; }
+body.luis-mode .task-card:not(.completed):not(.batch-selected):nth-child(6) { animation-delay: 2.0s; }
 @keyframes luisCardPulse {
     0%, 100% { box-shadow: 0 0 0px rgba(255,255,255,0); }
     50%       { box-shadow: 0 0 18px rgba(255,255,255,0.18), 0 0 40px rgba(255,255,255,0.06); }
 }
 
 /* Brillo en el header */
+body.luis-mode .main-header { overflow: hidden; }
 body.luis-mode .main-header::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
-    animation: luisHeaderShine 4s ease-in-out infinite;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.32) 50%, rgba(255,255,255,0.18) 60%, transparent 100%);
+    width: 60%;
+    height: 100%;
+    top: 0; left: 0;
+    animation: luisHeaderShine 2.5s linear infinite;
 }
 @keyframes luisHeaderShine {
-    0%   { transform: translateX(-100%); }
-    50%  { transform: translateX(100%); }
-    100% { transform: translateX(100%); }
+    0%   { transform: translateX(-170%); }
+    100% { transform: translateX(280%); }
 }
 
 /* Sidebar brilla */
@@ -1895,7 +1875,6 @@ body.luis-mode .task-cover {
 
     <!-- Opción Luis Elements -->
     <canvas id="luis-canvas"></canvas>
-    <div id="luis-cursor-aura"></div>
     <div id="luis-banner">✨ Opción Luis activada</div>
 
     <script type="module">
@@ -3595,7 +3574,6 @@ let luisParticles = [];
 
 const luisCanvas = document.getElementById('luis-canvas');
 const luisCtx = luisCanvas.getContext('2d');
-const luisCursorAura = document.getElementById('luis-cursor-aura');
 const luisBanner = document.getElementById('luis-banner');
 const luisSwitch = document.getElementById('luis-switch');
 const luisToggleRow = document.getElementById('luis-toggle-row');
@@ -3663,39 +3641,15 @@ function luisLoop() {
     }
 }
 
-function luisClickBurst(e) {
-    if (!luisActive) return;
-    for (let i = 0; i < 18; i++) luisParticles.push(createParticle(e.clientX, e.clientY, true));
-    const burst = document.createElement('div');
-    burst.className = 'luis-click-burst';
-    burst.style.left = e.clientX + 'px';
-    burst.style.top = e.clientY + 'px';
-    burst.style.fontSize = '2rem';
-    burst.innerHTML = '\u2726';
-    burst.style.color = 'rgba(255,255,255,0.9)';
-    burst.style.textShadow = '0 0 16px rgba(255,255,255,0.8)';
-    document.body.appendChild(burst);
-    setTimeout(function(){ burst.remove(); }, 800);
-}
+/* luisClickBurst removed */
 
-function luisMouseMove(e) {
-    luisCursorAura.style.left = e.clientX + 'px';
-    luisCursorAura.style.top = e.clientY + 'px';
-    if (Math.random() > 0.65) {
-        const trail = createParticle(e.clientX + (Math.random()-0.5)*20, e.clientY + (Math.random()-0.5)*20);
-        trail.size = Math.random() * 8 + 4;
-        trail.decay = 0.02;
-        luisParticles.push(trail);
-    }
-}
+/* luisMouseMove removed */
 
 function activateLuis() {
     luisActive = true;
     luisParticles = [];
     document.body.classList.add('luis-mode');
     luisCanvas.classList.add('active');
-    document.addEventListener('mousemove', luisMouseMove);
-    document.addEventListener('click', luisClickBurst);
     luisLoop();
     luisBanner.classList.add('show');
     setTimeout(function(){ luisBanner.classList.remove('show'); }, 2800);
@@ -3708,8 +3662,6 @@ function deactivateLuis() {
     luisActive = false;
     document.body.classList.remove('luis-mode');
     luisCanvas.classList.remove('active');
-    document.removeEventListener('mousemove', luisMouseMove);
-    document.removeEventListener('click', luisClickBurst);
     if (luisAnimFrame) cancelAnimationFrame(luisAnimFrame);
     luisParticles = [];
     luisCtx.clearRect(0, 0, luisCanvas.width, luisCanvas.height);
