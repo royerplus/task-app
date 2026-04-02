@@ -45,8 +45,6 @@ body {
 .app-container {
     display: flex;
     height: 100%;
-    position: relative;
-    z-index: 2;
 }
 
 /* Login Screen */
@@ -1427,164 +1425,6 @@ select.form-select:focus {
     background: rgba(255,255,255,0.2);
     border-radius: var(--radius-full);
 }
-/* ===== OPCIÓN LUIS ===== */
-.luis-switch {
-    width: 48px;
-    height: 26px;
-    background: var(--bg-surface-elevated);
-    border-radius: 13px;
-    border: 1px solid var(--border-color);
-    position: relative;
-    transition: background 0.3s ease, border-color 0.3s ease;
-    flex-shrink: 0;
-}
-.luis-switch.on {
-    background: linear-gradient(90deg, #fff, #e0e0e0);
-    border-color: rgba(255,255,255,0.5);
-    box-shadow: 0 0 12px rgba(255,255,255,0.4);
-}
-.luis-switch-thumb {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 18px;
-    height: 18px;
-    background: var(--text-tertiary);
-    border-radius: 50%;
-    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s ease;
-}
-.luis-switch.on .luis-switch-thumb {
-    transform: translateX(22px);
-    background: #09090b;
-}
-
-/* Canvas de partículas */
-#luis-canvas {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-}
-#luis-canvas.active { opacity: 1; }
-
-/* Cursor aura y click burst removidos */
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
-}
-
-/* Pulso en tarjetas */
-body.luis-mode .task-card {
-    animation: luisCardPulse 3s ease-in-out infinite;
-}
-body.luis-mode .task-card:nth-child(2) { animation-delay: 0.4s; }
-body.luis-mode .task-card:nth-child(3) { animation-delay: 0.8s; }
-body.luis-mode .task-card:nth-child(4) { animation-delay: 1.2s; }
-body.luis-mode .task-card:nth-child(5) { animation-delay: 1.6s; }
-body.luis-mode .task-card:nth-child(6) { animation-delay: 2.0s; }
-body.luis-mode .task-card.completed,
-body.luis-mode .task-card.batch-selected {
-    animation-play-state: paused;
-    box-shadow: none;
-}
-@keyframes luisCardPulse {
-    0%, 100% { box-shadow: 0 0 0px rgba(255,255,255,0); }
-    50%       { box-shadow: 0 0 18px rgba(255,255,255,0.18), 0 0 40px rgba(255,255,255,0.06); }
-}
-
-/* Brillo en el header */
-body.luis-mode .main-header { overflow: hidden; }
-body.luis-mode .main-header::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.32) 50%, rgba(255,255,255,0.18) 60%, transparent 100%);
-    width: 60%;
-    height: 100%;
-    top: 0; left: 0;
-    animation: luisHeaderShine 2.5s linear infinite;
-}
-@keyframes luisHeaderShine {
-    0%   { transform: translateX(-170%); }
-    100% { transform: translateX(280%); }
-}
-
-/* Sidebar brilla */
-body.luis-mode .sidebar {
-    box-shadow: 2px 0 30px rgba(255,255,255,0.06);
-    animation: luisSidebarGlow 5s ease-in-out infinite;
-}
-@keyframes luisSidebarGlow {
-    0%, 100% { box-shadow: 2px 0 20px rgba(255,255,255,0.03); }
-    50%       { box-shadow: 2px 0 40px rgba(255,255,255,0.1); }
-}
-
-/* FAB enloquecido */
-body.luis-mode .fab {
-    animation: luisFabDance 2s ease-in-out infinite;
-}
-@keyframes luisFabDance {
-    0%, 100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-    25%       { transform: scale(1.08) rotate(5deg); }
-    75%       { transform: scale(1.08) rotate(-5deg); }
-    50%       { box-shadow: 0 0 40px rgba(255,255,255,0.35); }
-}
-
-/* Day items con shimmer */
-body.luis-mode .day-item.active {
-    animation: luisDayShimmer 2s ease-in-out infinite;
-}
-@keyframes luisDayShimmer {
-    0%, 100% { box-shadow: none; }
-    50%       { box-shadow: inset 0 0 20px rgba(255,255,255,0.08), 0 0 15px rgba(255,255,255,0.08); }
-}
-
-/* Textos con glow */
-body.luis-mode .main-header h1 {
-    animation: luisTitleGlow 3s ease-in-out infinite;
-}
-@keyframes luisTitleGlow {
-    0%, 100% { text-shadow: none; }
-    50%       { text-shadow: 0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.15); }
-}
-
-/* Banner Luis al activar */
-#luis-banner {
-    position: fixed;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-120px);
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 100px;
-    padding: 10px 24px;
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    z-index: 9996;
-    pointer-events: none;
-    transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.5s ease;
-    opacity: 0;
-    white-space: nowrap;
-    box-shadow: 0 4px 30px rgba(255,255,255,0.15);
-}
-#luis-banner.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-}
-
-/* Bordes animados en task-cover con luis */
-body.luis-mode .task-cover {
-    animation: luisCoverBorder 4s ease-in-out infinite;
-}
-@keyframes luisCoverBorder {
-    0%, 100% { filter: brightness(1); }
-    50%       { filter: brightness(1.08) contrast(1.05); }
-}
 
 </style>
     <!-- Google Fonts -->
@@ -1763,21 +1603,6 @@ body.luis-mode .task-cover {
                         <option value="es" selected>Español</option>
                     </select>
                 </div>
-                <!-- Opción Luis -->
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-md); cursor: pointer;" id="luis-toggle-row">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 1.3rem;">✨</span>
-                            <div>
-                                <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">Opción Luis</div>
-                                <div style="font-size: 0.75rem; color: var(--text-tertiary);">Modo espectáculo total</div>
-                            </div>
-                        </div>
-                        <div class="luis-switch" id="luis-switch">
-                            <div class="luis-switch-thumb"></div>
-                        </div>
-                    </div>
-                </div>
                 <div class="credits">
                     <p data-i18n="creditsText">Created by Rogelio Espino Martinez</p>
                 </div>
@@ -1877,10 +1702,6 @@ body.luis-mode .task-cover {
             <div class="lightbox-desc" id="lightbox-desc"></div>
         </div>
     </div>
-
-    <!-- Opción Luis Elements -->
-    <canvas id="luis-canvas"></canvas>
-    <div id="luis-banner">✨ Opción Luis activada</div>
 
     <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -3570,119 +3391,6 @@ onAuthStateChanged(auth, async (user) => {
             currentDayId = null;
         }
     }
-});
-
-// ===== OPCIÓN LUIS =====
-let luisActive = false;
-let luisAnimFrame = null;
-let luisParticles = [];
-
-const luisCanvas = document.getElementById('luis-canvas');
-const luisCtx = luisCanvas.getContext('2d');
-const luisBanner = document.getElementById('luis-banner');
-const luisSwitch = document.getElementById('luis-switch');
-const luisToggleRow = document.getElementById('luis-toggle-row');
-
-function resizeLuisCanvas() {
-    luisCanvas.width = window.innerWidth;
-    luisCanvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeLuisCanvas);
-resizeLuisCanvas();
-
-const PARTICLE_CHARS = ['\u2726', '\u2727', '\u2605', '\u2729', '\u2736', '\u2738', '\u00b7', '\u2022', '\u25e6', '\u2218', '\u22c6', '+', '\u00d7'];
-
-function createParticle(x, y, burst) {
-    burst = burst || false;
-    const speed = burst ? (Math.random() * 5 + 2) : (Math.random() * 1.2 + 0.3);
-    const angle = Math.random() * Math.PI * 2;
-    return {
-        x: (x !== undefined && x !== null) ? x : Math.random() * luisCanvas.width,
-        y: (y !== undefined && y !== null) ? y : Math.random() * luisCanvas.height,
-        vx: Math.cos(angle) * speed * (burst ? 1 : 0.3),
-        vy: Math.sin(angle) * speed * (burst ? 1 : 0.3) - (burst ? 0 : Math.random() * 0.8 + 0.2),
-        size: Math.random() * (burst ? 18 : 12) + (burst ? 8 : 4),
-        alpha: burst ? 1 : Math.random() * 0.7 + 0.2,
-        decay: burst ? (Math.random() * 0.025 + 0.015) : (Math.random() * 0.005 + 0.002),
-        char: PARTICLE_CHARS[Math.floor(Math.random() * PARTICLE_CHARS.length)],
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.08,
-        glow: Math.random() > 0.5,
-        burst: burst,
-    };
-}
-
-function spawnAmbientParticles() {
-    if (luisParticles.filter(function(p){ return !p.burst; }).length < 80) {
-        for (let i = 0; i < 3; i++) {
-            luisParticles.push(createParticle());
-        }
-    }
-}
-
-function luisLoop() {
-    if (!luisActive) return;
-    luisAnimFrame = requestAnimationFrame(luisLoop);
-    luisCtx.clearRect(0, 0, luisCanvas.width, luisCanvas.height);
-    spawnAmbientParticles();
-    for (let i = luisParticles.length - 1; i >= 0; i--) {
-        const p = luisParticles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= p.decay;
-        p.rotation += p.rotSpeed;
-        if (p.alpha <= 0 || p.y < -40) { luisParticles.splice(i, 1); continue; }
-        luisCtx.save();
-        luisCtx.globalAlpha = Math.max(0, p.alpha);
-        luisCtx.translate(p.x, p.y);
-        luisCtx.rotate(p.rotation);
-        luisCtx.font = p.size + 'px serif';
-        luisCtx.textAlign = 'center';
-        luisCtx.textBaseline = 'middle';
-        if (p.glow) { luisCtx.shadowColor = 'rgba(255,255,255,0.9)'; luisCtx.shadowBlur = 12; }
-        luisCtx.fillStyle = 'rgba(255,255,255,' + p.alpha + ')';
-        luisCtx.fillText(p.char, 0, 0);
-        luisCtx.restore();
-    }
-}
-
-/* luisClickBurst removed */
-
-/* luisMouseMove removed */
-
-function activateLuis() {
-    luisActive = true;
-    luisParticles = [];
-    document.body.classList.add('luis-mode');
-    luisCanvas.classList.add('active');
-    luisLoop();
-    luisBanner.classList.add('show');
-    setTimeout(function(){ luisBanner.classList.remove('show'); }, 2800);
-    for (let i = 0; i < 60; i++) {
-        setTimeout(function(){ if (luisActive) luisParticles.push(createParticle()); }, i * 30);
-    }
-}
-
-function deactivateLuis() {
-    luisActive = false;
-    document.body.classList.remove('luis-mode');
-    luisCanvas.classList.remove('active');
-    if (luisAnimFrame) cancelAnimationFrame(luisAnimFrame);
-    luisParticles = [];
-    luisCtx.clearRect(0, 0, luisCanvas.width, luisCanvas.height);
-    luisBanner.textContent = '\u2728 Opci\u00f3n Luis desactivada';
-    luisBanner.classList.add('show');
-    setTimeout(function(){
-        luisBanner.classList.remove('show');
-        luisBanner.textContent = '\u2728 Opci\u00f3n Luis activada';
-    }, 2000);
-}
-
-luisToggleRow.addEventListener('click', function() {
-    luisActive = !luisActive;
-    luisSwitch.classList.toggle('on', luisActive);
-    if (luisActive) activateLuis();
-    else deactivateLuis();
 });
 
 </script>
